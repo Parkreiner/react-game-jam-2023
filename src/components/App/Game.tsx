@@ -10,7 +10,7 @@ I've made an effort to comment for every instance of this.
 The lack of styling is intended - I figured it was best to focus primarily on functional game logic.
 
 Boss and party move data *could* be condensed into one "moves" object with how they're written,
-but it seems like separating them out is worth it in case we want to have different mechanics/features implemented for bosses and players.
+but it seems like separating them out is worth it in case we want to have different mechanics/features implemented for bosses vs party characters.
 
 There are a number of comments before the main Game component describing or planning functions that have yet to be written.
 
@@ -23,7 +23,7 @@ Beef doesn't die, he just gets negative health.
 
 */
 
-// characters, moves, and stats
+// CHARACTER DATA  & MOVE DATA
 // action/move object creator
 function Move(name, type, target, value, castTime, cooldown, effect){
   this.name = name,
@@ -79,6 +79,10 @@ const partyChars = {
   clr: new PartyChar('Cleric', 'Silva', 100, 0.75, 1, 50, [partyMoves.atk, partyMoves.hel]),
 }
 
+
+
+// JSX COMPONENTS
+
 // nameplate component to display character name and a live HP value
 function nameplate(char, hp){
   return (
@@ -87,6 +91,35 @@ function nameplate(char, hp){
     </div>
   )
 }
+
+// returns a component with buttons that allow you to attack a character
+function actionPlate(actor){
+  let moves = [...actor.moves];
+  let content = moves.map(move => <MoveButton key={move.name} move={move} />)
+  return (
+    <>
+      {content}
+    </>
+  )
+}
+
+// button that takes in the information from a move passed into it 
+// revisiting the button portion later - doing turn logic first and taking it one component at a time
+function MoveButton({ move }) {
+  return (
+    <div id="singleMove" key={move.name}>
+      {/* <button onClick={() => setp1hp((p1hp) => p1hp - move.value)}>
+        {move.name}: {move.value}
+      </button> */}
+    </div>
+  )
+}
+
+// planned: targeting menu jsx component
+
+
+
+// GAME LOGIC 
 
 // this takes in all members of the game lobby and returns an array where they are sorted low-high by initiative 
 function turnOrder(lobby){
@@ -104,7 +137,7 @@ function turnOrder(lobby){
 // 6) increment turn variable
 // 7) repeat
 
-// planned: targeting menu jsx component
+// planned: move execution logic
 
 // planned: HP logic - cap character HP at their max health, and stop it from going below 0. 
 
@@ -116,6 +149,8 @@ function turnOrder(lobby){
 
 // planned: status tracking of cooldowns, buffs, debuffs, alive/dead, designed to plug into calculations for every turn
 
+
+
 export default function Game() {
   // needs to be abstracted for a character select - currently just pulling characters straight from the dataset to establish a "lobby"
   const lobby = [bossChars.bng, partyChars.war, partyChars.rog, partyChars.clr]
@@ -125,29 +160,6 @@ export default function Game() {
   const [p1hp, setp1hp] = useState(lobby[1].maxHP);
   const [p2hp, setp2hp] = useState(lobby[2].maxHP);
   const [p3hp, setp3hp] = useState(lobby[3].maxHP)
-
-  // button that takes in the information from a move passed into it 
-  // currently directly targeting p1's hp for testing purposes - check turn logic pseudocode for next steps
-  function MoveButton({ move }) {
-    return (
-      <div id="singleMove" key={move.name}>
-        <button onClick={() => setp1hp((p1hp) => p1hp - move.value)}>
-          {move.name}: {move.value}
-        </button>
-      </div>
-    )
-  }
-
-  // returns a component with buttons that allow you to attack a character
-  function actionPlate(actor){
-    let moves = [...actor.moves];
-    let content = moves.map(move => <MoveButton key={move.name} move={move} />)
-    return (
-      <>
-        {content}
-      </>
-    )
-  }
   
   return (
     <>
