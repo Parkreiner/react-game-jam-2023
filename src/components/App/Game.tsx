@@ -84,10 +84,11 @@ const partyChars = {
 // JSX COMPONENTS
 
 // nameplate component to display character name and a live HP value
-function nameplate(char, hp){
+function nameplate(status){
+
   return (
     <div>
-        {char.name}: {hp}
+        {status.char.name}: {status.hp}
     </div>
   )
 }
@@ -133,12 +134,11 @@ function turnOrder(lobby){
 }
 
 // planned: move execution logic
+// question: how do moves interface with the status update? does status update take in a move and work through the logic? 
 
 // planned: HP logic - cap character HP at their max health, and stop it from going below 0. 
 
 // planned: function for party logic that determines what their automatic path of action should be
-
-// planned: status tracking of dead party, cooldowns, buffs, debuffs, alive/dead, designed to plug into calculations for every turn
 
 // game end check function
 function gameOver(bossHP, partyHP){
@@ -158,40 +158,55 @@ function gameOver(bossHP, partyHP){
 // 6) increment turn variable
 // 7) repeat
 
-// planned: main game logic which takes in characters in lobby and builds status objects for them, and handles calling all other game logic
+// used to set the initial state for a character in the lobby
+// keeps track of character, hp, effects, cast timer/queue, cooldowns, and death
+function newStatus(charId){
+  const charInfo = {
+  char: charId,
+  hp: charId.maxHP,
+  dead: false,
+  fx: [],
+  cast: {},
+  cd: {}
+  }
+  return charInfo;
+}
 
-// this info object should be used in a function which takes in a character and returns the object with their info attached to char and hp
-// this function would be used to set the state for every character in the lobby
-// info object: keeps track of character, hp, effects, cast timer/queue, cooldowns, and death
-// const charInfo = {
-//   char: {},
-//   hp: 0,
-//   dead: false,
-//   fx: [],
-//   cast: {},
-//   cd: {}
-// }
+// used to update the status of a character in the lobby
+function statusUpdate(status, pointer, value, type){
+  // needs logic for separate pointers and values
+  // if pointer is hp, update hp value accordingly
+  // if (pointer === "hp"){
+  //   if (status.hp - value < 0) status.hp = 0;
+  //   if (status.hp + value > status.char.maxHP) status.hp = status.char.maxHP;
+  //   else status.hp = status + value;
+  // }
+  // if pointer is dead, boolean. etc
+}
+
+
 export default function Game() {
   // needs to be abstracted for a character select - currently just pulling characters straight from the dataset to establish a "lobby"
   const lobby = [bossChars.bng, partyChars.war, partyChars.rog, partyChars.clr]
 
   // STATE DATA
-  // uses the maxHP values from character stats to set their HP in state and allow it to update 
-  // const [boss, setBoss] = useState(lobby[0].maxHP);
-  // const [p1, setp1] = useState(lobby[1].maxHP);
-  // const [p2, setp2] = useState(lobby[2].maxHP);
-  // const [p3, setp3] = useState(lobby[3].maxHP);
+  // using the status function to build an object that keeps track of each character in the lobby in state
+  const [boss, setBoss] = useState(newStatus(lobby[0]));
+  const [p1, setp1] = useState(newStatus(lobby[1]));
+  const [p2, setp2] = useState(newStatus(lobby[2]));
+  const [p3, setp3] = useState(newStatus(lobby[3]));
 
   // setting the current turn in state
   const [turn, setTurn] = useState(0)
 
+
   return (
     <>
       <h1>PARTY SMASHER</h1>  
-      {/* {nameplate(lobby[0], bossHP)}
-      {nameplate(lobby[1], p1hp)}
-      {nameplate(lobby[2], p2hp)}
-      {nameplate(lobby[3], p3hp)} */}
+      {nameplate(boss)}
+      {nameplate(p1)}
+      {nameplate(p2)}
+      {nameplate(p3)}
     </>
   );
 }
