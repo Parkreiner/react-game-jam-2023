@@ -117,17 +117,38 @@ function MoveButton({ move }) {
 
 // planned: targeting menu jsx component
 
+// planned: nameplate grouping components for boss & party members
+
+// planned: game end component
+
 
 
 // GAME LOGIC 
 
 // this takes in all members of the game lobby and returns an array where they are sorted low-high by initiative 
 function turnOrder(lobby){
+  // when statuses are implemented, there should be a status check here for cooldowns and statuses which would
+  // remove someone from the turn order 
   return lobby.toSorted((a, b) => a.initiative - b.initiative)
 }
 
+// planned: move execution logic
+
+// planned: HP logic - cap character HP at their max health, and stop it from going below 0. 
+
+// planned: function for party logic that determines what their automatic path of action should be
+
+// planned: status tracking of dead party, cooldowns, buffs, debuffs, alive/dead, designed to plug into calculations for every turn
+
+// game end check function
+function gameOver(bossHP, partyHP){
+  if (bossHP === 0) return true;
+  else if (partyHP.reduce((acc, curr) => acc + curr, 0) === 0) return true;
+  else return false;
+}
+
 // turn logic function pseudocode
-// base case: check if lobby[0] hp is 0 or if lobby[1...x] is a combined 0. if so, execute game end logic
+// base case: check gameOver function. if true, gameEnd logic/component (?)
 // 1) check turn variable. if turn variable > turnorder array length, set to 0.
 // 2) load character moves from lobby[turn variable] 
 // 2.5) APPLY STATUSES TO CALCULATIONS ONCE IMPLEMENTED
@@ -137,39 +158,40 @@ function turnOrder(lobby){
 // 6) increment turn variable
 // 7) repeat
 
-// planned: move execution logic
+// planned: main game logic which takes in characters in lobby and builds status objects for them, and handles calling all other game logic
 
-// planned: HP logic - cap character HP at their max health, and stop it from going below 0. 
-
-// planned: function for party logic that determines what their automatic path of action should be
-
-// planned: game end check function
-
-// planned: dead party member functionality
-
-// planned: status tracking of cooldowns, buffs, debuffs, alive/dead, designed to plug into calculations for every turn
-
-
-
+// this info object should be used in a function which takes in a character and returns the object with their info attached to char and hp
+// this function would be used to set the state for every character in the lobby
+// info object: keeps track of character, hp, effects, cast timer/queue, cooldowns, and death
+// const charInfo = {
+//   char: {},
+//   hp: 0,
+//   dead: false,
+//   fx: [],
+//   cast: {},
+//   cd: {}
+// }
 export default function Game() {
   // needs to be abstracted for a character select - currently just pulling characters straight from the dataset to establish a "lobby"
   const lobby = [bossChars.bng, partyChars.war, partyChars.rog, partyChars.clr]
 
-  // using the maxHP values from character stats to set their HP in state and allow it to update 
-  const [bossHP, setBossHP] = useState(lobby[0].maxHP);
-  const [p1hp, setp1hp] = useState(lobby[1].maxHP);
-  const [p2hp, setp2hp] = useState(lobby[2].maxHP);
-  const [p3hp, setp3hp] = useState(lobby[3].maxHP)
-  
+  // STATE DATA
+  // uses the maxHP values from character stats to set their HP in state and allow it to update 
+  // const [boss, setBoss] = useState(lobby[0].maxHP);
+  // const [p1, setp1] = useState(lobby[1].maxHP);
+  // const [p2, setp2] = useState(lobby[2].maxHP);
+  // const [p3, setp3] = useState(lobby[3].maxHP);
+
+  // setting the current turn in state
+  const [turn, setTurn] = useState(0)
+
   return (
     <>
       <h1>PARTY SMASHER</h1>  
-      {nameplate(lobby[0], bossHP)}
+      {/* {nameplate(lobby[0], bossHP)}
       {nameplate(lobby[1], p1hp)}
       {nameplate(lobby[2], p2hp)}
-      {nameplate(lobby[3], p3hp)}
-      {/* currently just displaying the actionPlate for the boss, not using turn order functionality */}
-      {actionPlate(lobby[0])}
+      {nameplate(lobby[3], p3hp)} */}
     </>
   );
 }
