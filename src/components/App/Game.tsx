@@ -1,16 +1,10 @@
 import { useState } from "react";
-
+import * as gamedata from "../../gamedata"
+import { current } from "@reduxjs/toolkit";
 /* 
 
-NOTE: I've tried to pseudocode the logic behind everything implemented thus far.
-I hope variable names combined with comments make it fairly readable.
-There are a few points where something is hardcoded that won't be as more systems are built. 
-I've made an effort to comment for every instance of this.
-
-The lack of styling is intended - I figured it was best to focus primarily on functional game logic.
-
-Boss and party move data *could* be condensed into one "moves" object with how they're written,
-but it seems like separating them out is worth it in case we want to have different mechanics/features implemented for bosses vs party characters.
+NOTE: The lack of styling is intended - I figured it was best to focus primarily on functional game logic.
+Styling would also be pointless if all the interactivity is moved over to a rendering engine once we get to that point.
 
 There are a number of comments before the main Game component describing or planning functions that have yet to be written.
 
@@ -18,84 +12,30 @@ Buffs and debuffs are not currently supported. We need a whole "status tracking"
 There are moves, buffs, and debuffs planned that have not been implemented yet:
 https://docs.google.com/spreadsheets/d/1T9uuqdbMwngADsLIWr-WOx_LJgiMs0tZJyaMuB5Xb9I/edit#gid=0
 
-If you 'npm run dev', you'll be able to use Bingus' moves against Beef. Bingus' moves are not implemented properly yet.
-Beef doesn't die, he just gets negative health.
-
 */
-
-// CHARACTER DATA  & MOVE DATA
-// action/move object creator
-function Move(name, type, target, value, castTime, cooldown, effect){
-  this.name = name,
-  this.type = type,
-  this.target = target,
-  this.value = value,
-  this.castTime = castTime,
-  this.cooldown = cooldown,
-  this.effect = effect
-}
-
-// boss move objects
-const bossMoves = {
-  swt: new Move('Swat', 'damage', 'aoe', 15, 0, 0, null),
-  pnc: new Move('Pounce', 'damage', 'single', 30, 0, 0, null),
-  grm: new Move('Groom', 'damage', 'self', 25, 0, 3, null),
-}
-
-// party move objects
-const partyMoves = {
-  atk: new Move('Attack', 'damage', 'single', 20, 0, 0, null),
-  hel: new Move('Heal', 'heal', 'single', 25, 1, 2, null),
-}
-
-// boss character object creator 
-function BossChar(name, maxHP, initiative, moves){
-  this.name = name,
-  this.maxHP = maxHP,
-  this.initiative = initiative, 
-  this.moves = moves
-}
-
-// boss character objects
-const bossChars = {
-  bng: new BossChar('Bingus, the Cat Deity', 500, 20, [bossMoves.swt, bossMoves.pnc, bossMoves.grm]),
-}
-
-// party character object creator
-function PartyChar(role, name, maxHP, phys, magic, initiative, moves){
-  this.role = role,
-  this.name = name, 
-  this.maxHP = maxHP, 
-  this.phys = phys, 
-  this.magic = magic, 
-  this.initiative = initiative, 
-  this.moves = moves
-}
-
-// party character objects
-const partyChars = {
-  war: new PartyChar('Warrior', 'Beef', 150, 1, 0, 75, [partyMoves.atk]),
-  rog: new PartyChar('Rogue', 'Ohoho', 100, 1.25, 0, 15, [partyMoves.atk]),
-  clr: new PartyChar('Cleric', 'Silva', 100, 0.75, 1, 50, [partyMoves.atk, partyMoves.hel]),
-}
-
-
 
 // JSX COMPONENTS
 
-// nameplate component to display character name and a live HP value
-function nameplate(status){
+// planned: character select 
 
+// nameplate component to display character name and a live HP value
+function nameplates(lobby){
   return (
-    <div>
-        {status.char.name}: {status.hp}
-    </div>
+    <>
+      <div>{lobby[0].char.name}: {lobby[0].hp}</div>
+      <div>{lobby[1].char.name}: {lobby[1].hp}</div>
+      <div>{lobby[2].char.name}: {lobby[2].hp}</div>
+      <div>{lobby[3].char.name}: {lobby[3].hp}</div>
+      <div>{lobby[4].char.name}: {lobby[4].hp}</div>
+    </>
   )
 }
 
-// returns a component with buttons that allow you to attack a character
-function actionPlate(actor){
-  let moves = [...actor.moves];
+// action plate is the component that lets the player interact with the game 
+function actionPlate(player){
+  if (!player.char) return (<>Waiting...</>)
+
+  let moves = [...player.moves];
   let content = moves.map(move => <MoveButton key={move.name} move={move} />)
   return (
     <>
@@ -105,7 +45,7 @@ function actionPlate(actor){
 }
 
 // button that takes in the information from a move passed into it 
-// revisiting the button portion later - doing turn logic first and taking it one component at a time
+// need to revisit - should just be a button that executes logic of other functions passed in to make moving data to server cleaner
 function MoveButton({ move }) {
   return (
     <div id="singleMove" key={move.name}>
@@ -116,97 +56,105 @@ function MoveButton({ move }) {
   )
 }
 
-// planned: targeting menu jsx component
-
-// planned: nameplate grouping components for boss & party members
-
 // planned: game end component
 
 
 
 // GAME LOGIC 
 
-// this takes in all members of the game lobby and returns an array where they are sorted low-high by initiative 
-function turnOrder(lobby){
-  // when statuses are implemented, there should be a status check here for cooldowns and statuses which would
-  // remove someone from the turn order 
-  return lobby.toSorted((a, b) => a.initiative - b.initiative)
+// planned: character select 
+
+// planned: function to sort out turn priority by speed, and if speed is equal, resolve turn order
+
+// this takes in all members of the game lobby and returns an array where they are sorted low-high by speed 
+function newTurnOrder(lobby){
+  return lobby.toSorted((a, b) => b.stats.speed - a.stats.speed)
 }
-
-// planned: move execution logic
-// question: how do moves interface with the status update? does status update take in a move and work through the logic? 
-
-// planned: HP logic - cap character HP at their max health, and stop it from going below 0. 
 
 // planned: function for party logic that determines what their automatic path of action should be
 
 // game end check function
-function gameOver(bossHP, partyHP){
-  if (bossHP === 0) return true;
-  else if (partyHP.reduce((acc, curr) => acc + curr, 0) === 0) return true;
+function gameOver(lobby){
+  if (lobby[0].dead) return true;
+  if (lobby[1].dead && lobby[2].dead && lobby[3].dead && lobby[4].dead) return true;
   else return false;
 }
 
-// turn logic function pseudocode
-// base case: check gameOver function. if true, gameEnd logic/component (?)
-// 1) check turn variable. if turn variable > turnorder array length, set to 0.
-// 2) load character moves from lobby[turn variable] 
-// 2.5) APPLY STATUSES TO CALCULATIONS ONCE IMPLEMENTED
-// 3) if a move has no targeting options (self or aoe), execute code on appropriate targets using value & type from move multiplied by stats
-// 4) if a move has targeting options, load a "target" component with (lobby size) buttons
-// 5) when the button is pressed, execute as in #3
-// 6) increment turn variable
-// 7) repeat
-
-// used to set the initial state for a character in the lobby
-// keeps track of character, hp, effects, cast timer/queue, cooldowns, and death
+// this is an object for every lobby member kept in state which keeps track of character, hp, effects, cast timer/queue, cooldowns, and death
 function newStatus(charId){
   const charInfo = {
-  char: charId,
-  hp: charId.maxHP,
-  dead: false,
-  fx: [],
-  cast: {},
-  cd: {}
+    char: charId,
+    stats: {
+      speed: charId.speed,
+      phys: charId.phys,
+      magic: charId.magic
+    },
+    hp: charId.maxHP,
+    dead: false,
+    fx: {},
+    cast: {},
+    cd: {}
   }
   return charInfo;
 }
 
-// used to update the status of a character in the lobby
-function statusUpdate(status, pointer, value, type){
+// this is the function which runs every turn that updates state for every character in the lobby
+// question: which values actually need to be passed in here?
+// question: can there be an array of characters in state for whom this update needs to tick, to reduce unnecessary executions?
+function updateStatus(set, status, move, source, target){
   // needs logic for separate pointers and values
+  // consider where "type" on moves determines value passed in
   // if pointer is hp, update hp value accordingly
   // if (pointer === "hp"){
-  //   if (status.hp - value < 0) status.hp = 0;
-  //   if (status.hp + value > status.char.maxHP) status.hp = status.char.maxHP;
-  //   else status.hp = status + value;
+
   // }
   // if pointer is dead, boolean. etc
 }
 
+/* turn logic: select move & targets, update status on all characters, check if game is over. if it is, set gameOver to true
+question: how does this share data with the action plate?
+action plate is a collection of buttons and nothing else
+action plate could:
+  1) set data that this reads
+  2) directly invoke this function with data it passes along from button presses (move selected and target)
+*/
+function turnLogic(player){
+
+}
+
+
 
 export default function Game() {
-  // needs to be abstracted for a character select - currently just pulling characters straight from the dataset to establish a "lobby"
-  const lobby = [bossChars.bng, partyChars.war, partyChars.rog, partyChars.clr]
-
   // STATE DATA
-  // using the status function to build an object that keeps track of each character in the lobby in state
-  const [boss, setBoss] = useState(newStatus(lobby[0]));
-  const [p1, setp1] = useState(newStatus(lobby[1]));
-  const [p2, setp2] = useState(newStatus(lobby[2]));
-  const [p3, setp3] = useState(newStatus(lobby[3]));
+  // using the new status function to build an object that keeps track of each character in state
+  // these will need to be abstracted to pull from data that they get from character select, not hard coded
+  const [boss, setBoss] = useState(newStatus(gamedata.bossChars.bng));
+  const [p1, setp1] = useState(newStatus(gamedata.partyChars.war));
+  const [p2, setp2] = useState(newStatus(gamedata.partyChars.rog));
+  const [p3, setp3] = useState(newStatus(gamedata.partyChars.clr));
+  const [p4, setp4] = useState(newStatus(gamedata.partyChars.wiz));
 
-  // setting the current turn in state
-  const [turn, setTurn] = useState(0)
+  const [isGameOver, setIsGameOver] = useState(false)
 
+  const [currentPlayer, setCurrentPlayer] = useState({})
+
+  const lobby = [boss, p1, p2, p3, p4];
+
+  while(isGameOver === false){
+    let turnOrder = newTurnOrder(lobby);
+    for(let turn = 0; turn < turnOrder.length; turn++){
+      setCurrentPlayer(lobby[turn]);
+      turnLogic(turnOrder[turn]);
+      if (gameOver(lobby)) setIsGameOver(true);
+    }
+
+  }
 
   return (
     <>
       <h1>PARTY SMASHER</h1>  
-      {nameplate(boss)}
-      {nameplate(p1)}
-      {nameplate(p2)}
-      {nameplate(p3)}
+      {nameplates(lobby)}
+      {actionPlate(currentPlayer)}
     </>
   );
 }
